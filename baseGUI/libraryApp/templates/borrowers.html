@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+<head>
+    <link rel="stylesheet" href="{% static 'libraryApp/baseStyles.css' %}">
+</head>
+
+<body>
+    <nav class="navbar">
+        <ul>
+            <li><a href="{% url 'home' %}"> Home </a></li>
+            <li><a href="{% url 'booksearch' %}"> Search Books </a></li>
+            <li><a href="{% url 'checkout' %}"> Check-Out </a></li>
+            <li><a href="{% url 'checkin' %}"> Check-In </a></li>
+            <li><a href="{% url 'borrowers' %}"> Borrowers </a></li>
+            <li><a href="{% url 'fines' %}"> Fines </a></li>
+        </ul>
+    </nav>
+
+    <div style="padding: 20px;">
+        <h1>Create New Borrower</h1>
+
+        {# Display error messages #}
+        {% if errors %}
+            <ul style="color: red; font-weight: bold;">
+                {% for e in errors %}
+                    <li>{{ e }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {# Display success message #}
+        {% if success %}
+            <p style="color: green; font-weight: bold;">
+                {{ success }}
+            </p>
+        {% endif %}
+
+        <form method="POST" style="margin-top: 20px;">
+            {% csrf_token %}
+
+            <label>Name*:</label><br>
+            <input type="text" name="name" value="{{ form.name|default:'' }}" /><br><br>
+
+            <label>SSN*:</label><br>
+            <input type="text" name="ssn" value="{{ form.ssn|default:'' }}" /><br><br>
+
+            <label>Address*:</label><br>
+            <input type="text" name="address" value="{{ form.address|default:'' }}" /><br><br>
+
+            <label>Phone (optional):</label><br>
+            <input type="text" name="phone" value="{{ form.phone|default:'' }}" /><br><br>
+
+            <button type="submit">Create Borrower</button>
+        </form>
+    </div>
+</body>
+
+</html>

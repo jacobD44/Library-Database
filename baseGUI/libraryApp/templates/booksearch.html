@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+    <head>
+        <link rel="stylesheet" href="{% static 'libraryApp/baseStyles.css' %}">
+        <title> Library Database Book Search </title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 40px; }
+            input[type="search"] {
+                width: 400px;
+                padding: 8px;
+            font-size: 16px;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+
+            th, td {
+                padding: 8px;
+                border: 1px solid #ccc; /* ADD THIS */
+            }
+
+            th {
+                background-color: #f2f2f2;
+                text-align: left;
+            }
+        </style>
+    </head>
+
+    <body>
+        <nav class="navbar">
+            <ul>
+                <li><a href="{% url 'home' %}"> Home </a></li>
+                <li><a href="{% url 'booksearch' %}"> Search Books </a></li>
+                <li><a href="{% url 'checkout' %}"> Check-Out </a></li>
+                <li><a href="{% url 'checkin' %}"> Check-In </a></li>
+                <li><a href="{% url 'borrowers' %}"> Borrowers </a></li>
+                <li><a href="{% url 'fines' %}"> Fines </a></li>
+            </ul>
+        </nav>
+
+        <div class="center">
+            <p> 
+                Search a book by entering a keyword or number <br>
+            </p>
+        </div>
+
+        <div class="center">
+            <form method="get">
+                    <input class="searchbar" name="search_book" type="search" 
+                    placeholder="Book Isbn, Title, or Author Name">
+
+                    <button type="submit"> Search </button>
+            </form>
+        </div>
+
+        {% if results %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ISBN</th>
+                    <th>Book Title</th>
+                    <th>Authors</th>
+                    <th>Availability</th>
+                    <th>Borrower ID</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in results %}
+                    <tr>
+                        <td>{{ row.Isbn }}</td>
+                        <td>{{ row.Title }}</td>
+                        <td>{{ row.authors }}</td>
+                        <td>{{ row.status }}</td>
+                        <td>
+                            {% if row.status == "OUT" %}
+                                <!-- Borrower ID will appear if checked out -->
+                                {{ row.Borrower_id }}
+                            {% else %}
+                                NULL
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% elif query %}
+        <p>No books matched your search.</p>
+    {% endif %}
+
+    </body>
+</html>

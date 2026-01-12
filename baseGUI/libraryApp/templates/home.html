@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title> Library Database Menu </title>
+        <style>
+            a.button {
+                display: inline-block;
+                margin: 15px;
+                padding: 10px 20px;
+                background-color: darkslategray;
+                color: white;
+                text-decoration: none;
+                border-radius: 5;
+                font-size: 20;
+            }
+        </style>
+    </head>
+
+    <body>
+        <h1> Library Database Management </h1>
+        <a href="{% url 'booksearch' %}" class="button"> Search Books </a>
+        <a href="{% url 'checkout' %}" class="button"> Check-out </a>
+        <a href="{% url 'checkin' %}" class="button"> Check-In </a>
+        <a href="{% url 'borrowers' %}" class="button"> Borrowers </a>
+        <a href="{% url 'fines' %}" class="button"> Fines </a>
+    </body>
+</html>

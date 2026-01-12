@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+    <head>
+        <link rel="stylesheet" href="{% static 'libraryApp/baseStyles.css' %}">
+        <title> Library Database Check-In </title>
+        <style>
+            .table-wrapper {
+                width: 80%;
+                margin: 50px auto 10px auto;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+        </style>
+    </head>
+
+    <body>
+        <nav class="navbar">
+            <ul>
+                <li><a href="{% url 'home' %}"> Home </a></li>
+                <li><a href="{% url 'booksearch' %}"> Search Books </a></li>
+                <li><a href="{% url 'checkout' %}"> Check-Out </a></li>
+                <li><a href="{% url 'checkin' %}"> Check-In </a></li>
+                <li><a href="{% url 'borrowers' %}"> Borrowers </a></li>
+                <li><a href="{% url 'fines' %}"> Fines </a></li>
+            </ul>
+        </nav>
+
+        <h1> Check-In Books </h1>
+
+        <div class="center">
+            <p> 
+                Search for Book loan: Type in a book isbn, borrower card id, or any borrower name (or part of borrower name.) <br>
+            </p>
+        </div>
+
+        <div class="center">
+            <form method="get">
+                    <input class="searchbar" name="search_loan" type="search" 
+                    placeholder="Book Isbn, Borrower Id, and/or Borrower Name.">
+
+                    <button type="submit"> Search </button>
+            </form>
+        </div>
+
+        <div class="table-wrapper">
+            {% if results %}
+            <form method="post">
+                {% csrf_token %}
+                <div class="table-container">
+                    <table border="1" cellpadding="8">
+                        <thead>
+                            <tr>
+                                <th> Select </th>
+                                <th> Loan Id </th>
+                                <th> ISBN </th>
+                                <th> Card Id </th>
+                                <th> Check-Out Date </th>
+                                <th> Due Date </th>
+                                <th> Check-In Date </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in results %}
+                            <tr>
+                                <td>
+                                    <input type="checkbox" name="selected_loans" value="{{ entry.0 }}">
+                                </td>
+                                <td>{{ entry.0 }}</td>
+                                <td>{{ entry.1 }}</td>
+                                <td>{{ entry.2 }}</td>
+                                <td>{{ entry.3 }}</td>
+                                <td>{{ entry.4 }}</td>
+                                <td>{{ entry.5 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            <div class="center">
+                <button type="submit"> Check In Selected Loans</button>
+            </div>
+        </form>
+        {% endif %}
+
+        {% if checkedIn %}
+        <div >
+            <p class="center"> Loan Ids Checked In  </p>
+            <hr>
+            {% for entry in checkedIn %}
+            <p> Loan ID: {{ entry.0 }}, Check In Time: {{ entry.1 }}</p>
+            <hr> 
+            {% endfor %}
+        </div>
+        {% endif %}
+        </div>
+    </body>
+        
+</html>

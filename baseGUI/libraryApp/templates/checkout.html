@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+    <head>
+        <link rel="stylesheet" href="{% static 'libraryApp/baseStyles.css' %}">
+        <title> Library Database Check-Out </title>
+        <style>
+            .table-wrapper {
+                width: 80%;
+                margin: 50px auto 10px auto;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+        </style>
+    </head>
+
+    <body>
+        <nav class="navbar">
+            <ul>
+                <li><a href="{% url 'home' %}"> Home </a></li>
+                <li><a href="{% url 'booksearch' %}"> Search Books </a></li>
+                <li><a href="{% url 'checkout' %}"> Check-Out </a></li>
+                <li><a href="{% url 'checkin' %}"> Check-In </a></li>
+                <li><a href="{% url 'borrowers' %}"> Borrowers </a></li>
+                <li><a href="{% url 'fines' %}"> Fines </a></li>
+            </ul>
+        </nav>
+        <h1> Check-Out Books </h1>
+
+        <div class="center">
+            <p> 
+                <!-- Search for Book loan: Type in a book isbn, corrower card id, or any borrower name (or part of borrower name.) <br> -->
+                Enter ISBN to check out a book <br>
+            </p>
+        </div>
+
+        <div class="center">
+            <form method="get">
+                    <input class="searchbar" name="find_book" type="search" 
+                    placeholder="Book Isbn.">
+
+                    <button type="submit"> Search </button> <!-- wrong search button -->
+            </form>
+        </div>
+        {% if error %}
+        <div>
+            <p class="center" style="color: red;"> {{ error }} </p>
+            <hr>
+        </div>
+        {% endif %}
+        <div class="table-wrapper">
+            {% if result %}
+            <div class="table-container">
+                {% csrf_token %}
+                <table border="1" cellpadding="8">
+                    <thead>
+                        <tr>
+                            <th> ISBN </th>
+                            <th> Book Name </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ result.0 }}</td>
+                            <td>{{ result.1 }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="center">
+            <p> 
+                <!-- Search for Book loan: Type in a book isbn, corrower card id, or any borrower name (or part of borrower name.) <br> -->
+                Enter Card Id <br>
+            </p>
+        </div>
+            <form method="get">
+
+                <div class="center">
+                    <input type="hidden" name="find_book" value="{{ user_book }}">
+                    <input class="searchbar" name="checkout" type="search" 
+                    placeholder="Card Id">
+
+                    <button type="submit"> Check Out </button>
+                </div>
+            </form>
+            {% if error %}
+            <div>
+                <p class="center" style="color: red;"> {{ error }} </p>
+                <hr>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if loan %}
+        <div >
+            <p class="center"> Successfully Checked Out {{ loan.4 }} on {{ loan.2 }}  </p>
+            <hr>
+            <p> ISBN: {{ loan.0 }}, Card ID: {{ loan.1 }} </p>
+            <p> Due Date: {{ loan.3 }} </p>
+            <hr> 
+        </div>
+        {% endif %}
+    </body>
+</html>

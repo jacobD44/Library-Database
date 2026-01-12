@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+    <head>
+        <link rel="stylesheet" href="{% static 'libraryApp/baseStyles.css' %}">
+        <title>Library Fines</title>
+        <style>
+            body { font-family: Arial, sans-serif; }
+            .page { max-width: 1100px; margin: 30px auto; padding: 0 20px 30px 20px; }
+            h1 { margin-bottom: 10px; }
+            .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin: 20px 0; }
+            .card { border: 1px solid #ccc; border-radius: 6px; padding: 14px; background: #f9f9f9; }
+            .card h2 { margin-top: 0; font-size: 18px; }
+            .card label { display: block; margin-bottom: 8px; font-weight: bold; }
+            .card input[type="text"], .card input[type="date"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+            .card button { margin-top: 8px; }
+            .alert { padding: 10px 14px; border-radius: 4px; margin: 10px 0; }
+            .alert.success { background: #e7f6ed; border: 1px solid #4caf50; color: #1b5e20; }
+            .alert.error { background: #fdecea; border: 1px solid #f44336; color: #b71c1c; }
+            .muted { color: #555; }
+            .table-container { margin-top: 12px; }
+            table { width: 100%; border-collapse: collapse; }
+            table th, table td { text-align: left; padding: 8px; }
+            table th { background: #ececec; }
+            .section-title { margin: 24px 0 8px 0; }
+            details.card { cursor: pointer; }
+            details.card summary { font-weight: bold; }
+            .inline-form { display: inline; }
+        </style>
+    </head>
+
+    <body>
+        <nav class="navbar">
+            <ul>
+                <li><a href="{% url 'home' %}"> Home </a></li>
+                <li><a href="{% url 'booksearch' %}"> Search Books </a></li>
+                <li><a href="{% url 'checkout' %}"> Check-Out </a></li>
+                <li><a href="{% url 'checkin' %}"> Check-In </a></li>
+                <li><a href="{% url 'borrowers' %}"> Borrowers </a></li>
+                <li><a href="{% url 'fines' %}"> Fines </a></li>
+            </ul>
+        </nav>
+
+        <div class="page">
+            <h1>Manage Fines</h1>
+            <p class="muted">Start by entering borrower Card ID to see their checkouts and fines.</p>
+
+            {% if success_message %}
+                <div class="alert success">{{ success_message }}</div>
+            {% endif %}
+            {% if error_message %}
+                <div class="alert error">{{ error_message }}</div>
+            {% endif %}
+
+            <div class="grid">
+                <div class="card">
+                    <h2>Enter borrower's Card ID</h2>
+                    <form method="get">
+                        <label for="card_id_lookup">Card ID</label>
+                        <input id="card_id_lookup" type="text" name="card_id" value="{{ card_id_value }}" placeholder="ID00000123">
+                        <button type="submit">Continue</button>
+                    </form>
+                </div>
+
+                {% if borrower_name %}
+                <div class="card">
+                    <h2>{{ borrower_name }}</h2>
+                    <p class="muted">Card: {{ card_id_value }}</p>
+                    <p class="muted">Today's date: {{ today_str }}</p>
+                </div>
+
+                <div class="card">
+                    <h2>Display options</h2>
+                    <form method="get">
+                        <input type="hidden" name="card_id" value="{{ card_id_value }}">
+                        <label>
+                            <input type="checkbox" name="include_paid" value="1" {% if include_paid %}checked{% endif %}>
+                            Include paid fines
+                        </label>
+                        <button type="submit">Update list</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>Pay fines</h2>
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="pay">
+                        <input type="hidden" name="include_paid" value="{% if include_paid %}1{% else %}0{% endif %}">
+                        <label for="card_id_pay">Card ID</label>
+                        <input id="card_id_pay" type="text" name="card_id" value="{{ card_id_value }}" placeholder="ID00000123">
+                        {% if outstanding_total %}
+                            <p class="muted">Outstanding: ${{ outstanding_total }}</p>
+                        {% endif %}
+                        <button type="submit">Pay outstanding fines</button>
+                    </form>
+                </div>
+                {% endif %}
+
+            </div>
+
+            {% if borrower_name %}
+                <h2 class="section-title">Borrower: {{ borrower_name }} ({{ card_id_value }})</h2>
+            {% endif %}
+
+            {% if borrower_name and current_loans %}
+                <div class="table-container">
+                    <h3>Current loans</h3>
+                    <table border="1" cellpadding="8">
+                        <thead>
+                            <tr>
+                                <th>Loan ID</th>
+                                <th>ISBN</th>
+                                <th>Title</th>
+                                <th>Date Out</th>
+                                <th>Due Date</th>
+                                <th>Return</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for loan in current_loans %}
+                                <tr>
+                                    <td>{{ loan.0 }}</td>
+                                    <td>{{ loan.1 }}</td>
+                                    <td>{{ loan.2 }}</td>
+                                    <td>{{ loan.3 }}</td>
+                                    <td>{{ loan.4 }}</td>
+                                    <td>
+                                        <form method="post" onsubmit="return confirm('Return {{ loan.2 }} (Loan {{ loan.0 }})?');">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="checkin">
+                                            <input type="hidden" name="loan_id" value="{{ loan.0 }}">
+                                            <input type="hidden" name="card_id" value="{{ card_id_value }}">
+                                            <input type="hidden" name="include_paid" value="{% if include_paid %}1{% else %}0{% endif %}">
+                                            <button type="submit">Check in</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% elif borrower_name %}
+                <p class="muted">No active loans for this borrower.</p>
+            {% else %}
+                <p class="muted">Enter borrower's Card ID above to see their current checkouts.</p>
+            {% endif %}
+
+            {% if borrower_name %}
+                <div class="table-container">
+                    <h3>Borrower's fines</h3>
+                    {% if user_fines_detail %}
+                        <table border="1" cellpadding="8">
+                            <thead>
+                                <tr>
+                                    <th>Loan ID</th>
+                                    <th>Book</th>
+                                    <th>Date Out</th>
+                                    <th>Due Date</th>
+                                    <th>Fine</th>
+                                    <th>Status</th>
+                                    <th>Pay</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for fine in user_fines_detail %}
+                                    <tr>
+                                        <td>{{ fine.0 }}</td>
+                                        <td>{{ fine.1 }}</td>
+                                        <td>{{ fine.2 }}</td>
+                                        <td>{{ fine.3 }}</td>
+                                        <td>${{ fine.4 }}</td>
+                                        <td>{% if fine.5 %}Paid{% else %}Unpaid{% endif %}</td>
+                                        <td>
+                                            {% if not fine.5 %}
+                                                <form method="post" class="inline-form">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="pay">
+                                                    <input type="hidden" name="card_id" value="{{ card_id_value }}">
+                                                    <input type="hidden" name="include_paid" value="{% if include_paid %}1{% else %}0{% endif %}">
+                                                    <button type="submit">Pay</button>
+                                                </form>
+                                            {% else %}
+                                                <span class="muted">Paid</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p class="muted">No fines to display for this card.</p>
+                    {% endif %}
+                </div>
+
+                <details class="card">
+                    <summary>Admin options</summary>
+                    <p class="muted">Refresh fines, view all fines, and adjust checked-out loan dates (updates fines).</p>
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="refresh">
+                        <input type="hidden" name="include_paid" value="{% if include_paid %}1{% else %}0{% endif %}">
+                        <input type="hidden" name="card_id" value="{{ card_id_value }}">
+                        <button type="submit">Refresh fines</button>
+                    </form>
+                    <div class="table-container" style="margin-top:12px;">
+                        <h4>All fines (admin)</h4>
+                        {% if admin_all_fines %}
+                            <table border="1" cellpadding="6">
+                                <thead>
+                                    <tr>
+                                        <th>Loan ID</th>
+                                        <th>Card ID</th>
+                                        <th>Borrower</th>
+                                        <th>Book</th>
+                                        <th>Date Out</th>
+                                        <th>Due Date</th>
+                                        <th>Fine</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for af in admin_all_fines %}
+                                        <tr>
+                                            <td>{{ af.0 }}</td>
+                                            <td>{{ af.1 }}</td>
+                                            <td>{{ af.2 }}</td>
+                                            <td>{{ af.3 }}</td>
+                                            <td>{{ af.4 }}</td>
+                                            <td>{{ af.5 }}</td>
+                                            <td>${{ af.6 }}</td>
+                                            <td>{% if af.7 %}Paid{% else %}Unpaid{% endif %}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <p class="muted">No fines in the system.</p>
+                        {% endif %}
+                    </div>
+                    <div class="table-container" style="margin-top:12px;">
+                        <h4>All checked-out books (admin)</h4>
+                        {% if admin_checked_out %}
+                            <table border="1" cellpadding="6">
+                                <thead>
+                                    <tr>
+                                        <th>Loan ID</th>
+                                        <th>Card ID</th>
+                                        <th>Borrower</th>
+                                        <th>Book</th>
+                                        <th>Date Out</th>
+                                        <th>Due Date</th>
+                                        <th>Date In</th>
+                                        <th>Update</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cl in admin_checked_out %}
+                                        <tr>
+                                            <td>{{ cl.0 }}</td>
+                                            <td>{{ cl.1 }}</td>
+                                            <td>{{ cl.2 }}</td>
+                                            <td>{{ cl.3 }}</td>
+                                            <td>
+                                                <input form="update-{{ cl.0 }}" type="date" name="date_out" value="{{ cl.4 }}">
+                                            </td>
+                                            <td>
+                                                <input form="update-{{ cl.0 }}" type="date" name="due_date" value="{{ cl.5 }}">
+                                            </td>
+                                            <td>
+                                                <input form="update-{{ cl.0 }}" type="date" name="date_in" value="{{ cl.6 }}">
+                                            </td>
+                                            <td>
+                                                <form id="update-{{ cl.0 }}" method="post">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="update_loan_dates">
+                                                    <input type="hidden" name="loan_id" value="{{ cl.0 }}">
+                                                    <input type="hidden" name="include_paid" value="{% if include_paid %}1{% else %}0{% endif %}">
+                                                    <input type="hidden" name="card_id" value="{{ card_id_value }}">
+                                                    <button type="submit">Save + refresh fines</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <p class="muted">No books are currently checked out.</p>
+                        {% endif %}
+                    </div>
+                </details>
+            {% endif %}
+        </div>
+    </body>
+</html>
